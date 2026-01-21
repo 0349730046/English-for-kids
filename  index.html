@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Nghe & Chạm – Sticker đáng yêu + nhạc nền</title>
+<style>
+  :root{
+    --bg1:#fff7fb; --bg2:#f2fbff;
+    --card:#ffffffcc;
+    --ink:#1b1b1f;
+    --muted:#6b6b75;
+    --line:#e8e8ee;
+    --good:#18b67a;
+    --bad:#e64646;
+    --accent:#6f7cff;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;
+    background:
+      radial-gradient(1200px 600px at 20% -10%, #ffeaf6 0%, transparent 60%),
+      radial-gradient(1000px 700px at 90% 10%, #e6fbff 0%, transparent 60%),
+      linear-gradient(180deg,var(--bg1),var(--bg2));
+  }
+  header{
+    position:sticky; top:0; z-index:10;
+    padding:12px 12px 10px;
+    background:linear-gradient(180deg,#fff, #ffffffcc);
+    border-bottom:1px solid var(--line);
+    backdrop-filter: blur(8px);
+  }
+  .titleRow{display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap}
+  .title{
+    font-weight:1000; font-size:18px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .badge{
+    display:inline-flex; align-items:center; gap:6px;
+    padding:6px 10px; border-radius:999px;
+    background:#fff; border:1px solid var(--line);
+    box-shadow:0 6px 16px rgba(0,0,0,.06);
+    font-weight:1000; font-size:13px;
+  }
+
+  .wrap{max-width:980px;margin:0 auto;padding:14px;display:grid;gap:14px}
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:22px;
+    padding:14px;
+    box-shadow:0 10px 26px rgba(0,0,0,.08);
+    backdrop-filter: blur(6px);
+  }
+
+  .toolbar{display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap}
+  .btn{
+    border:0; border-radius:18px;
+    padding:10px 12px;
+    font-weight:1000; font-size:15px;
+    background:#fff;
+    border:1px solid var(--line);
+    box-shadow:0 8px 18px rgba(0,0,0,.07);
+    display:inline-flex; align-items:center; gap:8px;
+  }
+  .btn.primary{background:linear-gradient(180deg,#111,#000); color:#fff; border:0}
+  .btn.pink{background:linear-gradient(180deg,#ff77b7,#ff4ca3); color:#fff; border:0}
+  .btn:active{transform:scale(.98)}
+  .hint{color:var(--muted); font-size:13px; text-align:center; line-height:1.4; margin-top:6px}
+
+  .toast{min-height:30px;text-align:center;font-weight:1000;font-size:18px;margin-top:10px}
+  .toast.ok{color:var(--good)}
+  .toast.bad{color:var(--bad)}
+
+  /* Targets */
+  .targets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  @media (max-width:680px){.targets{grid-template-columns:1fr}}
+  .target{
+    border-radius:22px;
+    background:#fff;
+    border:3px dashed #d8dbf3;
+    box-shadow:0 10px 22px rgba(0,0,0,.07);
+    padding:12px;
+    display:grid; gap:10px;
+    position:relative;
+    overflow:hidden;
+    user-select:none;
+    transition:.15s transform, .15s border-color, .15s box-shadow;
+  }
+  .target:before{
+    content:"";
+    position:absolute; inset:-40px;
+    background:radial-gradient(closest-side, rgba(111,124,255,.18), transparent 60%);
+    transform: rotate(10deg);
+    pointer-events:none;
+  }
+  .target.active{border-color:var(--accent); box-shadow:0 14px 28px rgba(111,124,255,.18), 0 10px 22px rgba(0,0,0,.07)}
+  .target.good{border-color:var(--good)}
+  .target.bad{border-color:var(--bad)}
+  .shake{animation:shake .25s linear 1}
+  @keyframes shake{
+    0%{transform:translateX(0)}
+    25%{transform:translateX(-6px)}
+    50%{transform:translateX(6px)}
+    75%{transform:translateX(-4px)}
+    100%{transform:translateX(0)}
+  }
+
+  .soundRow{display:flex; justify-content:center; position:relative; z-index:1}
+  .soundBtn{
+    width:74px; height:74px; border-radius:999px;
+    border:0;
+    background:linear-gradient(180deg,#111,#000);
+    color:#fff; font-size:34px;
+    display:grid; place-items:center;
+    box-shadow:0 14px 26px rgba(0,0,0,.14);
+    position:relative;
+  }
+  .soundBtn:after{
+    content:"";
+    position:absolute; inset:-10px;
+    border-radius:999px;
+    border:3px solid rgba(111,124,255,.22);
+    filter: blur(.2px);
+  }
+  .sticker{
+    position:absolute; right:10px; top:10px;
+    font-size:20px;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:4px 8px;
+    box-shadow:0 8px 18px rgba(0,0,0,.07);
+    transform: rotate(6deg);
+    z-index:2;
+  }
+
+  .slot{
+    position:relative; z-index:1;
+    border-radius:18px;
+    border:1px solid var(--line);
+    background:linear-gradient(180deg,#ffffff,#f7f8ff);
+    min-height:110px;
+    padding:10px;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+  }
+  .slot img{width:100%;max-height:130px;object-fit:contain}
+  .slot .ph{color:#8a8a96;font-weight:1000;font-size:14px;text-align:center}
+  .sparkle{
+    position:absolute; left:-40px; top:-30px;
+    width:120px; height:120px;
+    background:radial-gradient(circle at 30% 30%, rgba(255,215,0,.35), transparent 55%);
+    transform: rotate(-12deg);
+    pointer-events:none;
+  }
+
+  /* Choices */
+  .choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+  @media (max-width:680px){.choices{grid-template-columns:1fr 1fr}}
+  .tile{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:22px;
+    padding:10px;
+    box-shadow:0 10px 22px rgba(0,0,0,.07);
+    transition:.12s transform;
+  }
+  .tile:active{transform:scale(.98)}
+  .tile.used{opacity:.45}
+  .imgBox{
+    width:100%; aspect-ratio:1/1;
+    border-radius:18px;
+    background:linear-gradient(180deg,#fff,#f7fbff);
+    border:1px dashed #d8dbf3;
+    display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
+    position:relative;
+  }
+  .imgBox:after{
+    content:"";
+    position:absolute; inset:8px;
+    border-radius:14px;
+    border:2px solid rgba(255,255,255,.6);
+    pointer-events:none;
+  }
+  .imgBox img{width:100%;height:100%;object-fit:contain;display:block}
+  .imgBox .broken{font-size:34px}
+  .label{margin-top:8px;text-align:center;font-weight:1000;color:#6b6b75;font-size:14px}
+
+  canvas#fx{position:fixed; inset:0; pointer-events:none; z-index:3}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+
+<header>
+  <div class="titleRow">
+    <div class="title">🧸 Sticker Nghe & Chạm — đúng/sai rõ ràng 🎆</div>
+    <div class="badge" id="musicBadge">🎵 Nhạc: Tắt</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="card">
+    <div class="toolbar">
+      <button class="btn primary" onclick="toggleMusic()" id="musicBtn">🎵 Bật nhạc</button>
+      <button class="btn" onclick="replayAll()">🔊 Nghe 3 từ</button>
+      <button class="btn pink" onclick="newRound()">🔄 Ván mới</button>
+    </div>
+    <div class="hint">Bé chạm ô 🔊 để nghe, rồi chạm ảnh để đặt. Sai → đỏ + rung + “Chưa đúng”. Đúng đủ 3 ô → pháo hoa 🎆 → tự chuyển vòng.</div>
+    <div id="toast" class="toast"></div>
+  </section>
+
+  <section class="card">
+    <div class="targets" id="targets"></div>
+  </section>
+
+  <section class="card">
+    <div class="choices" id="choices"></div>
+    <div class="hint">📁 Ảnh lấy từ thư mục <b>images/</b>. Nếu hiện ❓ thì thiếu ảnh hoặc sai tên file.</div>
+  </section>
+</div>
+
+<script>
+const WORDS = [
+  {en:"mom",    img:"images/mom.png"},
+  {en:"dad",    img:"images/dad.png"},
+  {en:"baby",   img:"images/baby.png"},
+  {en:"milk",   img:"images/milk.png"},
+  {en:"egg",    img:"images/egg.png"},
+  {en:"apple",  img:"images/apple.png"},
+  {en:"banana", img:"images/banana.png"},
+  {en:"rice",   img:"images/rice.png"},
+  {en:"sun",    img:"images/sun.png"},
+  {en:"moon",   img:"images/moon.png"},
+  {en:"tree",   img:"images/tree.png"},
+  {en:"flower", img:"images/flower.png"},
+];
+
+let prompts=[], options=[], active=0, placed={}, used=new Set();
+
+function speak(text){
+  if(!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang="en-US";
+  u.rate=0.85;
+  speechSynthesis.speak(u);
+}
+
+function $(id){ return document.getElementById(id); }
+function shuffle(a){ return [...a].sort(()=>Math.random()-0.5); }
+
+function setToast(type, text){
+  const el = $("toast");
+  el.className = "toast" + (type ? " " + type : "");
+  el.textContent = text || "";
+}
+function setActive(i){
+  active = i;
+  document.querySelectorAll(".target").forEach(t=>t.classList.remove("active"));
+  const el = document.querySelector(`.target[data-i="${i}"]`);
+  if(el) el.classList.add("active");
+}
+function isPlaced(en){
+  return Object.values(placed).some(x=>x && x.en===en);
+}
+function markTargetState(i, state){
+  const t = document.querySelector(`.target[data-i="${i}"]`);
+  if(!t) return;
+  t.classList.remove("good","bad","shake");
+  if(state) t.classList.add(state);
+  if(state==="bad") t.classList.add("shake");
+  setTimeout(()=>{ t.classList.remove("good","bad","shake"); }, 520);
+}
+
+function replayAll(){
+  let i=0;
+  const play=()=>{
+    if(i>=prompts.length) return;
+    speak(prompts[i].en);
+    i++;
+    setTimeout(play, 850);
+  };
+  play();
+}
+
+function newRound(){
+  placed = {};
+  setToast("", "");
+
+  let pool = WORDS.filter(w=>!used.has(w.en));
+  if(pool.length < 6){ used.clear(); pool = [...WORDS]; }
+
+  prompts = shuffle(pool).slice(0,3);
+  prompts.forEach(w=>used.add(w.en));
+  options = shuffle([...prompts, ...shuffle(pool).slice(3,6)]);
+
+  active = 0;
+  render();
+  setActive(0);
+}
+
+function render(){
+  renderTargets();
+  renderChoices();
+}
+
+function renderTargets(){
+  const wrap = $("targets");
+  wrap.innerHTML = "";
+  const stickers = ["✨","🌟","🧁","🍭","🐻","🐰","🦄","🌈"];
+  prompts.forEach((w,i)=>{
+    const t = document.createElement("div");
+    t.className = "target";
+    t.dataset.i = String(i);
+    t.onclick = ()=>{ setActive(i); speak(w.en); };
+
+    const st = document.createElement("div");
+    st.className = "sticker";
+    st.textContent = stickers[(Math.random()*stickers.length)|0];
+
+    const soundRow = document.createElement("div");
+    soundRow.className = "soundRow";
+    const b = document.createElement("button");
+    b.className = "soundBtn";
+    b.type="button";
+    b.textContent="🔊";
+    b.onclick = (ev)=>{ ev.stopPropagation(); setActive(i); speak(w.en); };
+    soundRow.appendChild(b);
+
+    const slot = document.createElement("div");
+    slot.className = "slot";
+    const sp = document.createElement("div");
+    sp.className = "sparkle";
+    slot.appendChild(sp);
+
+    if(placed[i]){
+      const img = document.createElement("img");
+      img.src = placed[i].img;
+      img.alt = placed[i].en;
+      slot.appendChild(img);
+    } else {
+      const ph = document.createElement("div");
+      ph.className = "ph";
+      ph.textContent = (active===i) ? "Chạm ảnh để đặt 👇" : "Chạm ô này rồi chọn ảnh";
+      slot.appendChild(ph);
+    }
+
+    t.appendChild(st);
+    t.appendChild(soundRow);
+    t.appendChild(slot);
+    wrap.appendChild(t);
+  });
+}
+
+function renderChoices(){
+  const wrap = $("choices");
+  wrap.innerHTML = "";
+  options.forEach(w=>{
+    const tile = document.createElement("div");
+    tile.className = "tile" + (isPlaced(w.en) ? " used" : "");
+    tile.onclick = ()=> onPick(w);
+
+    const box = document.createElement("div");
+    box.className = "imgBox";
+
+    const img = document.createElement("img");
+    img.src = w.img;
+    img.alt = w.en;
+    img.onerror = ()=>{ box.innerHTML = '<div class="broken">❓</div>'; };
+    box.appendChild(img);
+
+    const lb = document.createElement("div");
+    lb.className = "label";
+    lb.textContent = w.en;
+
+    tile.appendChild(box);
+    tile.appendChild(lb);
+    wrap.appendChild(tile);
+  });
+}
+
+function checkWin(){
+  return Object.keys(placed).length===3 &&
+    [0,1,2].every(i=>placed[i] && placed[i].en===prompts[i].en);
+}
+
+function onPick(word){
+  if(isPlaced(word.en)) return;
+
+  const correct = prompts[active].en;
+  if(word.en === correct){
+    placed[active] = word;
+    markTargetState(active, "good");
+    setToast("ok", "Đúng rồi! 🎉");
+    speak(correct);
+
+    renderTargets();
+    renderChoices();
+
+    for(let i=0;i<3;i++){ if(!placed[i]){ setActive(i); break; } }
+
+    if(checkWin()){
+      setToast("ok", "Giỏi quá! Đúng cả 3 🎆");
+      fireworks();
+      if(musicOn) playJingle(true);
+      setTimeout(()=>{ newRound(); }, 1400);
+    } else {
+      if(musicOn) playJingle(false);
+    }
+  } else {
+    if(musicOn) beep();
+    markTargetState(active, "bad");
+    setToast("bad", "Chưa đúng, thử lại nhé!");
+  }
+}
+
+/* Fireworks */
+const canvas = document.getElementById("fx");
+const ctx = canvas.getContext("2d");
+function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+addEventListener("resize", resize); resize();
+
+function fireworks(){
+  const particles=[];
+  const ox = canvas.width/2;
+  const oy = canvas.height*0.26;
+  for(let i=0;i<150;i++){
+    particles.push({
+      x:ox,y:oy,
+      vx:(Math.random()-0.5)*9,
+      vy:(Math.random()-0.7)*9,
+      a:1,
+      c:`hsl(${Math.random()*360},100%,60%)`
+    });
+  }
+  let t=0;
+  (function anim(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.06; p.a-=0.014;
+      ctx.globalAlpha=Math.max(p.a,0);
+      ctx.fillStyle=p.c;
+      ctx.beginPath(); ctx.arc(p.x,p.y,3,0,Math.PI*2); ctx.fill();
+    });
+    ctx.globalAlpha=1;
+    if(t++<70) requestAnimationFrame(anim);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  })();
+}
+
+/* ===== Background music (gentle) ===== */
+let musicOn = false;
+let ac = null;
+let master = null;
+let timer = null;
+let step = 0;
+
+const prog = [
+  [261.63, 329.63, 392.00], // C
+  [293.66, 369.99, 440.00], // Dm
+  [329.63, 415.30, 493.88], // Em
+  [349.23, 440.00, 523.25], // F
+];
+
+function ensureAudio(){
+  if(ac) return;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  ac = new AC();
+  master = ac.createGain();
+  master.gain.value = 0.03; // gentle
+  master.connect(ac.destination);
+}
+
+function playChord(freqs, dur=0.35){
+  ensureAudio();
+  const now = ac.currentTime;
+  freqs.forEach((f)=>{
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.type = "sine";
+    o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(0.9, now+0.02);
+    g.gain.exponentialRampToValueAtTime(0.001, now+dur);
+    o.connect(g); g.connect(master);
+    o.start(now); o.stop(now+dur+0.02);
+  });
+}
+
+function loopMusic(){
+  if(!musicOn) return;
+  const chord = prog[step % prog.length];
+  playChord(chord, 0.42);
+  step++;
+  timer = setTimeout(loopMusic, 520);
+}
+
+function toggleMusic(){
+  musicOn = !musicOn;
+
+  if(musicOn){
+    ensureAudio();
+    if(ac.state === "suspended") ac.resume();
+    $("musicBtn").textContent = "🔇 Tắt nhạc";
+    $("musicBadge").textContent = "🎵 Nhạc: Bật";
+    step = 0;
+    clearTimeout(timer);
+    loopMusic();
+    playJingle(false);
+  }else{
+    $("musicBtn").textContent = "🎵 Bật nhạc";
+    $("musicBadge").textContent = "🎵 Nhạc: Tắt";
+    clearTimeout(timer);
+    timer = null;
+    if(master) master.gain.value = 0.0;
+    setTimeout(()=>{ if(master) master.gain.value = 0.03; }, 80);
+  }
+}
+
+function beep(){
+  ensureAudio();
+  const now = ac.currentTime;
+  const o = ac.createOscillator();
+  const g = ac.createGain();
+  o.type="square";
+  o.frequency.value=180;
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(0.08, now+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, now+0.12);
+  o.connect(g); g.connect(master);
+  o.start(now); o.stop(now+0.14);
+}
+
+function playJingle(bigWin){
+  ensureAudio();
+  const notes = bigWin ? [523.25, 659.25, 783.99, 1046.5] : [523.25, 659.25];
+  let t = ac.currentTime;
+  notes.forEach((f)=>{
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.type="triangle";
+    o.frequency.value=f;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.10, t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+0.14);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t+0.16);
+    t += 0.12;
+  });
+}
+
+newRound();
+</script>
+</body>
+</html>
